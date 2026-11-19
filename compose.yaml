@@ -1,0 +1,30 @@
+# SQL-Uebungsumgebung
+name: sql-labor-lokal
+
+services:
+  db:
+    image: postgres:18
+    # Container startet mit dem Docker-Dienst nach einem Rechner-Reboot.
+    # Beendigung Container: "docker compose down"
+    # Container starten (Image already built): "docker compose up -d"
+    restart: always
+    environment:
+      POSTGRES_USER: sqluser
+      POSTGRES_PASSWORD: "GitPassWord"
+      POSTGRES_DB: sqluebung
+    volumes:
+      # Lokaler, persistenter SQL-Datenbestand im Projektordner ./data.
+      # CREATE/INSERT/UPDATE/DELETE werden durch PostgreSQL hier gespeichert,
+      # Nicht manuell bearbeiten/loeschen und nicht parallel mit zwei Servern nutzen.
+      - ./data:/var/lib/postgresql
+      # Nur bei erstmaliger Initialisierung ausfuehren, nicht bei jedem Start.
+      - ./init:/docker-entrypoint-initdb.d:ro
+    # 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqluser -d sqluebung"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    stop_grace_period: 60s
+    # SQL-Zugriff erfolgt ueber docker compose exec.
